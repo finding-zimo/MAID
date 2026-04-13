@@ -1,0 +1,13 @@
+Metadata-Version: 2.4
+Name: maid
+Version: 0.1.0
+Summary: Medium-Agnostic AI Duo — a real-time AI companion for gaming
+Requires-Python: >=3.11
+Requires-Dist: anthropic>=0.40.0
+Requires-Dist: mss>=9.0.0
+Requires-Dist: sounddevice>=0.4.6
+Requires-Dist: numpy>=1.26.0
+Requires-Dist: Pillow>=10.0.0
+Requires-Dist: elevenlabs>=1.0.0
+Requires-Dist: openai>=1.30.0
+Requires-Dist: pyttsx3>=2.90
