@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import io
 import logging
 import threading
 import time
@@ -67,9 +66,7 @@ class ScreenCapture:
             while not self._stop_event.is_set():
                 try:
                     screenshot = sct.grab(monitor)
-                    buf = io.BytesIO()
-                    mss.tools.to_png(screenshot.rgb, screenshot.size, output=buf)
-                    png_bytes = buf.getvalue()
+                    png_bytes = mss.tools.to_png(screenshot.rgb, screenshot.size)
 
                     with self._lock:
                         self._latest = png_bytes

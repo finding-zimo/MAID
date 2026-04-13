@@ -1,3 +1,4 @@
+README.md
 pyproject.toml
 maid/__init__.py
 maid/config.py
@@ -10,6 +11,7 @@ maid.egg-info/requires.txt
 maid.egg-info/top_level.txt
 maid/ai/__init__.py
 maid/ai/client.py
+maid/ai/mock_client.py
 maid/ai/personalities.py
 maid/capture/__init__.py
 maid/capture/audio.py
