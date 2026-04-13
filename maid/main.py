@@ -105,6 +105,9 @@ def main() -> None:
     if settings.mock:
         from maid.ai.mock_client import MockAIClient
         ai = MockAIClient(settings)
+    elif settings.model.startswith("gemini"):
+        from maid.ai.gemini_client import GeminiClient
+        ai = GeminiClient(settings)
     else:
         from maid.ai.client import AIClient
         ai = AIClient(settings)

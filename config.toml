@@ -3,8 +3,12 @@
 # CLI flags override values set here.
 
 [api]
-# Required for AI analysis
+# Anthropic Claude (set if using a claude-* model)
 anthropic_api_key = ""
+
+# Google Gemini — free tier available at https://aistudio.google.com
+# Use with: model = "gemini-2.0-flash" in [session]
+gemini_api_key = ""
 
 # TTS providers — at least one required (or set tts_provider = "pyttsx3" for offline)
 elevenlabs_api_key = ""
@@ -18,8 +22,10 @@ mode = "commentator"
 # Lower = more frequent commentary, higher API cost.
 capture_interval_seconds = 4.0
 
-# Claude model to use. Sonnet is faster; Opus has better vision.
-model = "claude-sonnet-4-6"
+# AI model to use.
+# Claude: "claude-sonnet-4-6", "claude-opus-4-6"
+# Gemini (free tier): "gemini-2.0-flash"
+model = "gemini-2.0-flash"
 
 # Max tokens in each AI response (keep low — these are spoken aloud).
 max_tokens = 150

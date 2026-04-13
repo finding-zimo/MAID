@@ -9,6 +9,7 @@ description = "Medium-Agnostic AI Duo — a real-time AI companion for gaming"
 requires-python = ">=3.11"
 dependencies = [
     "anthropic>=0.40.0",
+    "google-genai>=1.0.0",
     "mss>=9.0.0",
     "sounddevice>=0.4.6",
     "numpy>=1.26.0",

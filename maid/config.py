@@ -17,6 +17,7 @@ PERSONALITY_MODE = Literal["commentator", "coach", "friend"]
 class Settings:
     # API keys
     anthropic_api_key: str = ""
+    gemini_api_key: str = ""
     elevenlabs_api_key: str = ""
     openai_api_key: str = ""
 
@@ -39,41 +40,68 @@ class Settings:
     mock: bool = False
 
 
+def _apply_toml(settings: Settings, path: Path) -> None:
+    """Merge a TOML file's values into settings. Missing file is silently ignored."""
+    if not path.exists():
+        return
+    with open(path, "rb") as f:
+        data = tomllib.load(f)
+
+    api = data.get("api", {})
+    session = data.get("session", {})
+    capture = data.get("capture", {})
+    tts = data.get("tts", {})
+
+    if "anthropic_api_key" in api:
+        settings.anthropic_api_key = api["anthropic_api_key"]
+    if "gemini_api_key" in api:
+        settings.gemini_api_key = api["gemini_api_key"]
+    if "elevenlabs_api_key" in api:
+        settings.elevenlabs_api_key = api["elevenlabs_api_key"]
+    if "openai_api_key" in api:
+        settings.openai_api_key = api["openai_api_key"]
+
+    if "mode" in session:
+        settings.mode = session["mode"]
+    if "capture_interval_seconds" in session:
+        settings.capture_interval_seconds = float(session["capture_interval_seconds"])
+    if "model" in session:
+        settings.model = session["model"]
+    if "max_tokens" in session:
+        settings.max_tokens = int(session["max_tokens"])
+
+    if "monitor_index" in capture:
+        settings.monitor_index = int(capture["monitor_index"])
+    if "audio_enabled" in capture:
+        settings.audio_enabled = bool(capture["audio_enabled"])
+
+    if "provider" in tts:
+        settings.tts_provider = tts["provider"]
+    if "elevenlabs_voice_id" in tts:
+        settings.elevenlabs_voice_id = tts["elevenlabs_voice_id"]
+    if "openai_voice" in tts:
+        settings.openai_voice = tts["openai_voice"]
+
+
 def load(path: str | Path = "config.toml") -> Settings:
-    """Load settings from a TOML file, then apply environment variable overrides."""
+    """Load settings from a TOML file, then apply environment variable overrides.
+
+    If a ``config.local.toml`` file exists next to the main config file, it is
+    loaded afterwards and its values take precedence. Use it for API keys and
+    other secrets that should not be committed to version control.
+    """
     settings = Settings()
-
     config_path = Path(path)
-    if config_path.exists():
-        with open(config_path, "rb") as f:
-            data = tomllib.load(f)
+    _apply_toml(settings, config_path)
 
-        api = data.get("api", {})
-        session = data.get("session", {})
-        capture = data.get("capture", {})
-        tts = data.get("tts", {})
-
-        settings.anthropic_api_key = api.get("anthropic_api_key", settings.anthropic_api_key)
-        settings.elevenlabs_api_key = api.get("elevenlabs_api_key", settings.elevenlabs_api_key)
-        settings.openai_api_key = api.get("openai_api_key", settings.openai_api_key)
-
-        settings.mode = session.get("mode", settings.mode)
-        settings.capture_interval_seconds = float(
-            session.get("capture_interval_seconds", settings.capture_interval_seconds)
-        )
-        settings.model = session.get("model", settings.model)
-        settings.max_tokens = int(session.get("max_tokens", settings.max_tokens))
-
-        settings.monitor_index = int(capture.get("monitor_index", settings.monitor_index))
-        settings.audio_enabled = bool(capture.get("audio_enabled", settings.audio_enabled))
-
-        settings.tts_provider = tts.get("provider", settings.tts_provider)
-        settings.elevenlabs_voice_id = tts.get("elevenlabs_voice_id", settings.elevenlabs_voice_id)
-        settings.openai_voice = tts.get("openai_voice", settings.openai_voice)
+    # Local override file — gitignored, safe for secrets.
+    local_path = config_path.parent / (config_path.stem + ".local.toml")
+    _apply_toml(settings, local_path)
 
     # Environment variable overrides
     env_map = {
         "ANTHROPIC_API_KEY": "anthropic_api_key",
+        "GEMINI_API_KEY": "gemini_api_key",
         "ELEVENLABS_API_KEY": "elevenlabs_api_key",
         "OPENAI_API_KEY": "openai_api_key",
         "MAID_MODE": "mode",
@@ -102,7 +130,15 @@ def validate(settings: Settings) -> None:
     if settings.mock:
         return
 
-    if not settings.anthropic_api_key:
+    is_gemini = settings.model.startswith("gemini")
+
+    if is_gemini and not settings.gemini_api_key:
+        raise ValueError(
+            "gemini_api_key is required when using a Gemini model. Set it in config.toml "
+            "under [api] or via the GEMINI_API_KEY environment variable."
+        )
+
+    if not is_gemini and not settings.anthropic_api_key:
         raise ValueError(
             "anthropic_api_key is required. Set it in config.toml under [api] "
             "or via the ANTHROPIC_API_KEY environment variable. "
