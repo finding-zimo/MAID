@@ -71,17 +71,20 @@ async def run(
         audio_hint = audio.get_hint()
         try:
             response_text = await asyncio.to_thread(ai.analyze_frame, frame_b64, audio_hint)
-            logger.info("[%s] %s", settings.mode, response_text)
         except Exception:
             logger.exception("AI analysis failed for frame %d", frame_count)
             await asyncio.sleep(2)
             continue
 
-        # 4. Speak
-        try:
-            await asyncio.to_thread(tts.speak, response_text)
-        except Exception:
-            logger.exception("TTS failed")
+        # 4. Speak (skip if the AI decided nothing notable is happening)
+        if response_text == "[SILENT]":
+            logger.debug("Frame %d: no notable action, staying silent", frame_count)
+        else:
+            logger.info("[%s] %s", settings.mode, response_text)
+            try:
+                await asyncio.to_thread(tts.speak, response_text)
+            except Exception:
+                logger.exception("TTS failed")
 
         # 5. Wait for the remainder of the capture interval.
         elapsed = time.monotonic() - loop_start
