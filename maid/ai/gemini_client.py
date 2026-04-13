@@ -45,8 +45,8 @@ class GeminiClient:
 
         # Prepend recent context turns (text only, no images).
         for prior_user, prior_model in self._context[-CONTEXT_WINDOW_TURNS:]:
-            contents.append(types.Content(role="user", parts=[types.Part.from_text(prior_user)]))
-            contents.append(types.Content(role="model", parts=[types.Part.from_text(prior_model)]))
+            contents.append(types.Content(role="user", parts=[types.Part(text=prior_user)]))
+            contents.append(types.Content(role="model", parts=[types.Part(text=prior_model)]))
 
         # Current turn with the screenshot.
         image_bytes = base64.b64decode(frame_b64)
@@ -55,7 +55,7 @@ class GeminiClient:
                 role="user",
                 parts=[
                     types.Part.from_bytes(data=image_bytes, mime_type="image/jpeg"),
-                    types.Part.from_text(user_text),
+                    types.Part(text=user_text),
                 ],
             )
         )
