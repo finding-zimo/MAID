@@ -66,6 +66,11 @@ class GeminiClient:
             config=types.GenerateContentConfig(
                 system_instruction=self._system_prompt,
                 max_output_tokens=self._max_tokens,
+                # Disable thinking — Gemini 2.5+ models use thinking tokens by
+                # default, which consume the max_output_tokens budget and leave
+                # almost nothing for the actual response. Real-time commentary
+                # doesn't benefit from extended reasoning.
+                thinking_config=types.ThinkingConfig(thinking_budget=0),
             ),
         )
 
