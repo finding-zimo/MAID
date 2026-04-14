@@ -94,6 +94,11 @@ async def run(
             except Exception:
                 logger.exception("TTS failed")
 
+            # In wait_for_tts mode the interval is measured from when speech
+            # finishes, guaranteeing a full gap before the next frame is sent.
+            if settings.wait_for_tts:
+                loop_start = time.monotonic()
+
         # 5. Wait for the remainder of the capture interval.
         elapsed = time.monotonic() - loop_start
         sleep_time = max(0.0, settings.capture_interval_seconds - elapsed)

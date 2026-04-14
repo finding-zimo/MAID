@@ -36,6 +36,10 @@ class Settings:
     elevenlabs_voice_id: str = "EXAVITQu4vr4xnSDxMaL"
     openai_voice: str = "nova"
 
+    # If True, the capture interval is measured from when TTS finishes rather
+    # than from the start of the iteration — ensures a full gap after each line.
+    wait_for_tts: bool = False
+
     # Mock mode — no API keys required, uses canned responses + pyttsx3
     mock: bool = False
 
@@ -74,6 +78,8 @@ def _apply_toml(settings: Settings, path: Path) -> None:
         settings.monitor_index = int(capture["monitor_index"])
     if "audio_enabled" in capture:
         settings.audio_enabled = bool(capture["audio_enabled"])
+    if "wait_for_tts" in session:
+        settings.wait_for_tts = bool(session["wait_for_tts"])
 
     if "provider" in tts:
         settings.tts_provider = tts["provider"]

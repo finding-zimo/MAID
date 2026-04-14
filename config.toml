@@ -30,6 +30,10 @@ model = "gemini-2.0-flash"
 # Max tokens in each AI response (keep low — these are spoken aloud).
 max_tokens = 150
 
+# If true, the capture interval starts after TTS finishes rather than at the
+# top of each iteration. Ensures a full gap after every line of commentary.
+wait_for_tts = false
+
 [capture]
 # Which monitor to capture (0 = primary).
 monitor_index = 0

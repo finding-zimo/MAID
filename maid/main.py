@@ -36,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--tts", dest="tts_provider", choices=["elevenlabs", "openai", "pyttsx3"], help="TTS provider")
     p.add_argument("--monitor", type=int, dest="monitor_index", help="Monitor index to capture")
     p.add_argument("--model", help="Claude model ID")
+    p.add_argument("--wait-for-tts", action="store_true", dest="wait_for_tts", help="Start the capture interval after TTS finishes, not before")
     p.add_argument("--mock", action="store_true", help="Run without API keys (canned responses + pyttsx3 TTS)")
     p.add_argument("--list-monitors", action="store_true", help="Print available monitors and exit")
     p.add_argument("-v", "--verbose", action="store_true", help="Enable debug logging")
@@ -78,6 +79,9 @@ def main() -> None:
         value = getattr(args, attr, None)
         if value is not None:
             setattr(settings, attr, value)
+
+    if args.wait_for_tts:
+        settings.wait_for_tts = True
 
     if args.mock:
         settings.mock = True
