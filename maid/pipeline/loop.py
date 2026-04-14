@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import asyncio
 import logging
+import re
 import time
 from typing import TYPE_CHECKING
 
@@ -71,9 +72,16 @@ async def run(
         audio_hint = audio.get_hint()
         try:
             response_text = await asyncio.to_thread(ai.analyze_frame, frame_b64, audio_hint)
-        except Exception:
-            logger.exception("AI analysis failed for frame %d", frame_count)
-            await asyncio.sleep(2)
+        except Exception as exc:
+            # On rate-limit errors, respect the suggested retry delay so we
+            # don't hammer the API and burn through the per-minute quota.
+            wait = _parse_retry_delay(str(exc))
+            if wait:
+                logger.warning("Rate limited — waiting %ds before next frame", wait)
+                await asyncio.sleep(wait)
+            else:
+                logger.exception("AI analysis failed for frame %d", frame_count)
+                await asyncio.sleep(2)
             continue
 
         # 4. Speak (skip if the AI decided nothing notable is happening)
@@ -91,3 +99,18 @@ async def run(
         sleep_time = max(0.0, settings.capture_interval_seconds - elapsed)
         if sleep_time > 0:
             await asyncio.sleep(sleep_time)
+
+
+def _parse_retry_delay(error_message: str) -> int:
+    """Extract the retry delay in seconds from a rate-limit error message.
+
+    Returns 0 if no delay is found (i.e. the error is not a rate-limit error).
+    Adds a small buffer to avoid immediately hitting the limit again.
+    """
+    match = re.search(r"retryDelay['\"]:\s*['\"](\d+)s", error_message)
+    if match:
+        return int(match.group(1)) + 2
+    # Fall back to a 60-second wait for any 429 error without a stated delay.
+    if "429" in error_message or "RESOURCE_EXHAUSTED" in error_message:
+        return 62
+    return 0
