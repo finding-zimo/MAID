@@ -19,8 +19,10 @@ openai_api_key = ""
 mode = "commentator"
 
 # Seconds between each analysis cycle.
-# Lower = more frequent commentary, higher API cost.
-capture_interval_seconds = 4.0
+# Default is 15s — the Gemini free tier allows 5 requests/minute (1 per 12s),
+# and silent frames still consume quota, so 15s gives comfortable headroom.
+# Lower values are fine on paid tiers. Use --interval to override at runtime.
+capture_interval_seconds = 15.0
 
 # AI model to use.
 # Claude: "claude-sonnet-4-6", "claude-opus-4-6"

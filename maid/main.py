@@ -97,6 +97,7 @@ def main() -> None:
 
     ai_label = "mock" if settings.mock else settings.model
     print(f"Starting MAID — mode: {settings.mode}, TTS: {settings.tts_provider}, AI: {ai_label}")
+    print(f"  Capture interval: {settings.capture_interval_seconds}s  (override with --interval SECS)")
 
     from maid.capture.audio import AudioCapture
     from maid.capture.screen import ScreenCapture
