@@ -29,6 +29,10 @@ class GeminiClient:
         self._max_tokens = settings.max_tokens
         self._system_prompt = PERSONALITIES[settings.mode]
 
+        # Gemma models don't support system_instruction — inject the personality
+        # as the first turn of the conversation instead.
+        self._uses_system_instruction = not settings.model.startswith("gemma")
+
         # Rolling context: list of (user_text, model_text) string pairs.
         # Images are not re-sent — only the text of prior turns.
         self._context: list[tuple[str, str]] = []
@@ -42,6 +46,11 @@ class GeminiClient:
             user_text += f" Note: {audio_hint}"
 
         contents: list = []
+
+        # Gemma: inject system prompt as an opening exchange before context.
+        if not self._uses_system_instruction:
+            contents.append(types.Content(role="user", parts=[types.Part(text=self._system_prompt)]))
+            contents.append(types.Content(role="model", parts=[types.Part(text="Understood. I'm ready.")]))
 
         # Prepend recent context turns (text only, no images).
         for prior_user, prior_model in self._context[-CONTEXT_WINDOW_TURNS:]:
@@ -60,18 +69,17 @@ class GeminiClient:
             )
         )
 
+        config_kwargs: dict = {"max_output_tokens": self._max_tokens}
+        if self._uses_system_instruction:
+            config_kwargs["system_instruction"] = self._system_prompt
+            # Disable thinking on Gemini 2.5+ — thinking tokens consume the
+            # max_output_tokens budget, leaving almost nothing for the response.
+            config_kwargs["thinking_config"] = types.ThinkingConfig(thinking_budget=0)
+
         response = self._client.models.generate_content(
             model=self._model,
             contents=contents,
-            config=types.GenerateContentConfig(
-                system_instruction=self._system_prompt,
-                max_output_tokens=self._max_tokens,
-                # Disable thinking — Gemini 2.5+ models use thinking tokens by
-                # default, which consume the max_output_tokens budget and leave
-                # almost nothing for the actual response. Real-time commentary
-                # doesn't benefit from extended reasoning.
-                thinking_config=types.ThinkingConfig(thinking_budget=0),
-            ),
+            config=types.GenerateContentConfig(**config_kwargs),
         )
 
         reply = response.text.strip()

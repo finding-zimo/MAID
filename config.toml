@@ -52,3 +52,8 @@ elevenlabs_voice_id = "EXAVITQu4vr4xnSDxMaL"
 
 # OpenAI TTS voice: alloy, echo, fable, onyx, nova, shimmer
 openai_voice = "nova"
+
+# macOS voice for pyttsx3 provider (macOS only). Leave empty for system default.
+# Run `say -v '?'` in Terminal to list all installed voices.
+# Examples: "Bad News", "Zarvox", "Fred", "Samantha", "Trinoids"
+macos_voice = ""

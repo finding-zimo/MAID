@@ -35,6 +35,8 @@ class Settings:
     tts_provider: TTS_PROVIDER = "elevenlabs"
     elevenlabs_voice_id: str = "EXAVITQu4vr4xnSDxMaL"
     openai_voice: str = "nova"
+    # macOS `say` voice name (pyttsx3 provider only, macOS only)
+    macos_voice: str = ""
 
     # If True, the capture interval is measured from when TTS finishes rather
     # than from the start of the iteration — ensures a full gap after each line.
@@ -87,6 +89,8 @@ def _apply_toml(settings: Settings, path: Path) -> None:
         settings.elevenlabs_voice_id = tts["elevenlabs_voice_id"]
     if "openai_voice" in tts:
         settings.openai_voice = tts["openai_voice"]
+    if "macos_voice" in tts:
+        settings.macos_voice = tts["macos_voice"]
 
 
 def load(path: str | Path = "config.toml") -> Settings:
@@ -136,7 +140,7 @@ def validate(settings: Settings) -> None:
     if settings.mock:
         return
 
-    is_gemini = settings.model.startswith("gemini")
+    is_gemini = settings.model.startswith("gemini") or settings.model.startswith("gemma")
 
     if is_gemini and not settings.gemini_api_key:
         raise ValueError(

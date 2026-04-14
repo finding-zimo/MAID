@@ -30,6 +30,8 @@ screen capture (background thread)
 
 The loop is sequential — analyze then speak, then repeat. The AI is instructed to respond with `[SILENT]` when nothing notable is happening, so commentary only fires on meaningful moments. The screen capture thread runs independently so analysis always gets the freshest available frame.
 
+**Context memory** — the model remembers the last 3 notable moments. Before each new frame is sent, the text of up to 3 prior exchanges is prepended to the conversation, so the AI can reference what it said earlier ("called it before it happened", "you redeemed yourself from that last disaster"). Images are not re-sent — only the text of prior responses — so memory is cheap. Silent frames don't consume context slots. The window size can be adjusted by changing `CONTEXT_WINDOW_TURNS` in `maid/ai/gemini_client.py`.
+
 ---
 
 ## Requirements
@@ -92,6 +94,7 @@ audio_enabled = false               # mic speaking hint (no transcription)
 provider = "pyttsx3"                # elevenlabs | openai | pyttsx3
 elevenlabs_voice_id = "EXAVITQu4vr4xnSDxMaL"   # Rachel (default)
 openai_voice = "nova"               # alloy | echo | fable | onyx | nova | shimmer
+macos_voice = ""                    # macOS only — see pyttsx3 voices section below
 ```
 
 ### Secrets: config.local.toml
@@ -199,6 +202,8 @@ options:
   --tts           TTS provider: elevenlabs, openai, or pyttsx3
   --monitor       Monitor index to capture (default: 0)
   --model         Vision model ID — any gemini-* or claude-* model
+  --voice         macOS voice name for pyttsx3 TTS (e.g. "Bad News", "Zarvox").
+                  Run `say -v '?'` to list all available voices.
   --wait-for-tts  Start the capture interval after TTS finishes, not before.
                   Ensures a full quiet gap after each line of commentary and
                   naturally reduces API call rate on free tier models.
@@ -290,6 +295,51 @@ Calm, analytical, direct. Delivers one actionable insight per observation — no
 Your best friend sitting next to you. Casually supportive, but will absolutely roast you for bad plays — in love, of course. Uses gaming slang naturally, tracks the session narrative (bad streaks, redemption arcs), and reacts like a real person instead of a scripted commentator.
 
 Personality system prompts live in `maid/ai/personalities.py` and can be edited directly to customize tone, vocabulary, or the threshold for when to stay silent.
+
+---
+
+## pyttsx3 voice options (macOS)
+
+On macOS, pyttsx3 uses the built-in `say` command. You can select any installed system voice with `--voice` or by setting `macos_voice` in `config.toml`:
+
+```
+maid --tts pyttsx3 --voice "Bad News"
+```
+
+Run `say -v '?'` in Terminal to see all voices on your machine. The English (US) voices installed by default:
+
+| Voice | Character |
+|---|---|
+| `Albert` | Classic robotic voice |
+| `Bad News` | Deep, ominous tone |
+| `Bahh` | Sheep-like |
+| `Bells` | Bell tones |
+| `Boing` | Bouncy cartoon voice |
+| `Bubbles` | Bubbly, underwater feel |
+| `Cellos` | Deep cello-like tone |
+| `Eddy (English (US))` | Casual, natural-sounding male |
+| `Flo (English (US))` | Natural-sounding female |
+| `Fred` | Classic Mac voice |
+| `Good News` | Upbeat, cheerful tone |
+| `Grandma (English (US))` | Elderly female voice |
+| `Grandpa (English (US))` | Elderly male voice |
+| `Jester` | Playful, comedic |
+| `Junior` | Young child voice |
+| `Kathy` | Clear female voice |
+| `Organ` | Pipe organ tones |
+| `Ralph` | Gruff male voice |
+| `Reed (English (US))` | Natural-sounding male |
+| `Rocko (English (US))` | Deep, confident male |
+| `Samantha` | Clear, default-quality female |
+| `Sandy (English (US))` | Natural-sounding female |
+| `Shelley (English (US))` | Natural-sounding female |
+| `Superstar` | Reverb-heavy, dramatic |
+| `Trinoids` | Alien robotic voice |
+| `Whisper` | Soft, whispered voice |
+| `Wobble` | Wobbly, unstable tone |
+| `Zarvox` | Sci-fi robotic voice |
+
+More voices (including high-quality neural voices like Ava and Tom) can be downloaded in **System Settings → Accessibility → Spoken Content → System Voice → Manage Voices**.
 
 ---
 

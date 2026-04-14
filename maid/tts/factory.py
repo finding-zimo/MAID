@@ -20,5 +20,5 @@ def build_tts(settings: Settings) -> TTSProvider:
         return OpenAITTS(settings)
     if provider == "pyttsx3":
         from maid.tts.pyttsx3_tts import Pyttsx3TTS
-        return Pyttsx3TTS()
+        return Pyttsx3TTS(settings)
     raise ValueError(f"Unknown TTS provider: {provider!r}")

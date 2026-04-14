@@ -11,8 +11,12 @@ from __future__ import annotations
 import logging
 import platform
 import subprocess
+from typing import TYPE_CHECKING
 
 from maid.tts.base import TTSProvider
+
+if TYPE_CHECKING:
+    from maid.config import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -20,7 +24,8 @@ _IS_MACOS = platform.system() == "Darwin"
 
 
 class Pyttsx3TTS(TTSProvider):
-    def __init__(self) -> None:
+    def __init__(self, settings: "Settings | None" = None) -> None:
+        self._voice = settings.macos_voice if settings else ""
         if not _IS_MACOS:
             import pyttsx3
             self._engine = pyttsx3.init()
@@ -30,7 +35,11 @@ class Pyttsx3TTS(TTSProvider):
     def speak(self, text: str) -> None:
         logger.debug("TTS: %r", text[:60])
         if _IS_MACOS:
-            subprocess.run(["say", text], check=False)
+            cmd = ["say"]
+            if self._voice:
+                cmd += ["-v", self._voice]
+            cmd.append(text)
+            subprocess.run(cmd, check=False)
         else:
             self._engine.say(text)
             self._engine.runAndWait()

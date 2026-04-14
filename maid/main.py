@@ -36,6 +36,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--tts", dest="tts_provider", choices=["elevenlabs", "openai", "pyttsx3"], help="TTS provider")
     p.add_argument("--monitor", type=int, dest="monitor_index", help="Monitor index to capture")
     p.add_argument("--model", help="Claude model ID")
+    p.add_argument("--voice", dest="macos_voice", help="macOS voice name for pyttsx3 TTS (e.g. 'Bad News', 'Zarvox'). Run: say -v '?' to list options")
     p.add_argument("--wait-for-tts", action="store_true", dest="wait_for_tts", help="Start the capture interval after TTS finishes, not before")
     p.add_argument("--mock", action="store_true", help="Run without API keys (canned responses + pyttsx3 TTS)")
     p.add_argument("--list-monitors", action="store_true", help="Print available monitors and exit")
@@ -80,6 +81,8 @@ def main() -> None:
         if value is not None:
             setattr(settings, attr, value)
 
+    if args.macos_voice:
+        settings.macos_voice = args.macos_voice
     if args.wait_for_tts:
         settings.wait_for_tts = True
 
@@ -110,7 +113,7 @@ def main() -> None:
     if settings.mock:
         from maid.ai.mock_client import MockAIClient
         ai = MockAIClient(settings)
-    elif settings.model.startswith("gemini"):
+    elif settings.model.startswith("gemini") or settings.model.startswith("gemma"):
         from maid.ai.gemini_client import GeminiClient
         ai = GeminiClient(settings)
     else:
